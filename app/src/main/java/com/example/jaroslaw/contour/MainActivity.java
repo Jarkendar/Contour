@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor rotationSensor;
     private float[] rotationVector;
-    private double trans = 0;
+    private float trans = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,9 +93,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             axisY.setText(ystring+rotationVector[1]);
             axisZ.setText(zstring+rotationVector[2]);
 
-            bubble.setPadding(areaXY.getWidth()/2+(int)trans, areaXY.getHeight()/2,0,0);
+            int areaXYWidth = areaXY.getWidth();
+            int areaXYHeight = areaXY.getHeight();
+            bubble.setPivotX(areaXYWidth/2);
+            bubble.setPivotY(areaXYHeight/2);
+            bubble.setPadding(centerBubbleXY(areaXYWidth), centerBubbleXY(areaXYHeight),0,0);
+        //    bubble.setRotation(trans);
             int[] padings = {bubble.getPaddingLeft(), bubble.getPaddingTop(), bubble.getPaddingRight(), bubble.getPaddingBottom()};
-      //      trans += 0.5;
+            trans += 0.5;
+            //max left 188
+            //max top
+            //max right
+            //max bottom
 
             double x = (double) Math.abs(rotationVector[0]);
             double y = (double) Math.abs(rotationVector[1]);
@@ -107,14 +116,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             for (int w : padings) {
                 Log.d(TAG, "Paddings = " + w);
             }
+
             Log.d(TAG, "area: "+ areaXY.getWidth()+"  "+ areaXY.getHeight());
-            Log.d(TAG, "bubble: "+ bubble.getWidth()+"  "+ bubble.getHeight());
+            Log.d(TAG, "bubble: "+bubble.getDrawable().getIntrinsicWidth()+"  "+bubble.getDrawable().getIntrinsicHeight());
             Log.d(TAG, "Transition = "+ trans);
+            Log.d(TAG, "Rotation = "+ bubble.getRotation());
+            Log.d(TAG, "Pivot Point =" +bubble.getPivotX() + " "+ bubble.getPivotY());
             Log.d(TAG, "onSensorChanged: angleAlpha "+ Math.toDegrees(angleAlpha));
             Log.d(TAG, "onSensorChanged: angleBeta "+ Math.toDegrees(angleBeta));
             Log.d(TAG, "onSensorChanged: angleGamma "+ Math.toDegrees(angleGamma));
 
         }
+    }
 
+    private int centerBubbleXY(int lenght){
+        return lenght/2-bubble.getDrawable().getIntrinsicWidth()/2;
     }
 }
