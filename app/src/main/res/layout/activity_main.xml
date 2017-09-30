@@ -6,72 +6,52 @@
     android:layout_height="match_parent"
     tools:context="com.example.jaroslaw.contour.MainActivity">
 
-    <TextView
-        android:id="@+id/desciption_X"
+    <ImageView
+        android:id="@+id/imageScaleHorizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/axis_X"
-        tools:layout_editor_absoluteX="74dp"
-        android:layout_above="@+id/desciption_Z"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:id="@+id/desciption_Y"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/axis_Y"
-        tools:layout_editor_absoluteX="75dp"
-        android:layout_above="@+id/desciption_Z"
+        app:srcCompat="@drawable/scalehorizontal"
+        android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 
-    <TextView
-        android:id="@+id/desciption_Z"
+    <ImageView
+        android:id="@+id/imageScaleVertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/axis_Z"
-        tools:layout_editor_absoluteX="75dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:id="@+id/axis_X"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_above="@+id/axis_Z"
-        android:layout_toEndOf="@+id/desciption_X" />
-
-    <TextView
-        android:id="@+id/axis_Y"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_alignBaseline="@+id/desciption_X"
-        android:layout_alignBottom="@+id/desciption_X"
-        android:layout_toEndOf="@+id/desciption_X" />
-
-    <TextView
-        android:id="@+id/axis_Z"
-        android:layout_marginLeft="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toEndOf="@+id/desciption_X" />
+        app:srcCompat="@drawable/scalevertical"
+        android:layout_below="@+id/imageScaleHorizontal"
+        android:layout_alignParentEnd="true" />
 
     <ImageView
         android:id="@+id/imageArea"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/areaxy"
-        tools:layout_editor_absoluteY="232dp"
-        tools:layout_editor_absoluteX="227dp"
-        android:layout_alignParentTop="true"/>
+        android:layout_below="@+id/imageScaleHorizontal"
+        android:layout_toStartOf="@+id/imageScaleVertical" />
 
     <ImageView
-        android:id="@+id/imageBubble"
+        android:id="@+id/imageBubbleHorizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/bubble"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        app:srcCompat="@drawable/bubble" />
+
+    <ImageView
+        android:id="@+id/imageBubbleVertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imageScaleHorizontal"
+        android:layout_toEndOf="@+id/imageArea"
+        app:srcCompat="@drawable/bubble" />
+
+    <ImageView
+        android:id="@+id/imageBubbleAreaXY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/imageScaleHorizontal"
+        app:srcCompat="@drawable/bubble" />
+
 </RelativeLayout>
