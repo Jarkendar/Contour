@@ -102,46 +102,52 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 angleCtoX = 90;
             }
 
-            double angleDtoY;
-            if (y!=0){
-                angleDtoY = Math.toDegrees(Math.atan(x/y));
-                if (angleDtoY > 0 && angleDtoY < 90-maxAngle){
-                    angleDtoY = 90-maxAngle;
-                }else if (angleDtoY < 0 && angleDtoY > -90+maxAngle){
-                    angleDtoY = -90+maxAngle;
-                }
-            }else {
-                angleDtoY = 90;
-            }
-
-            if (x < 0) {
-                angleDtoY = -angleDtoY;
-            }
-
-            double angleEtoX;
-            if (x!=0){
-                angleEtoX = Math.toDegrees(Math.atan(y/x));
-                if (angleEtoX > 0 && angleEtoX < 90-maxAngle){
-                    angleEtoX = 90-maxAngle;
-                }else if (angleEtoX < 0 && angleEtoX > -90+maxAngle){
-                    angleEtoX = -90+maxAngle;
-                }
-            }else {
-                angleEtoX = 90;
-            }
-
-            if (y < 0) {
-                angleEtoX = -angleEtoX;
-            }
-
             if (angleIsAboveLimit(angleXYtoZ)) angleXYtoZ = 90 - maxAngle;
             if (angleIsAboveLimit(angleYZtoX)) angleYZtoX = 90 - maxAngle;
             if (angleIsAboveLimit(angleZXtoY)) angleZXtoY = 90 - maxAngle;
 
             doAreaXY(xAvg, yAvg, zAvg, angleCtoX, angleXYtoZ);
-            doVertical(-angleDtoY);
-            doHorizontal(angleEtoX);
+            doVertical(angleToAxisY(x,y));
+            doHorizontal(angleToAxisX(x,y));
         }
+    }
+
+    private double angleToAxisY(double x, double y){
+        double angle;
+        if (y!=0){
+            angle = Math.toDegrees(Math.atan(x/y));
+            if (angle > 0 && angle < 90-maxAngle){
+                angle = 90-maxAngle;
+            }else if (angle < 0 && angle > -90+maxAngle){
+                angle = -90+maxAngle;
+            }
+        }else {
+            angle = 90;
+        }
+
+        if (x < 0) {
+            angle = -angle;
+        }
+        return -angle;
+    }
+
+    private double angleToAxisX(double x, double y){
+        double angle;
+        if (x!=0){
+            angle = Math.toDegrees(Math.atan(y/x));
+            if (angle > 0 && angle < 90-maxAngle){
+                angle = 90-maxAngle;
+            }else if (angle < 0 && angle > -90+maxAngle){
+                angle = -90+maxAngle;
+            }
+        }else {
+            angle = 90;
+        }
+
+        if (y < 0) {
+            angle = -angle;
+        }
+        return angle;
     }
 
     private void doHorizontal(double angle){
@@ -199,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         bubble.setPivotY(height / 2);
         return calculateAParameter(getMaxTransition(background.getHeight(), bubble.getDrawable().getIntrinsicWidth()));
     }
-
 
     private int getMaxTransition(int areaWidth, int bubbleWidth) {
         return areaWidth / 2 - (2 * bubbleWidth / 3);
