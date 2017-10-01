@@ -68,48 +68,54 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float[] vectorsXYZ = sensorEvent.values;
-            float xAvg = 0, yAvg = 0, zAvg = 0;
-            if (averageWork) {
-                for (int i = 0; i < MAXITERATION; i++) {
-                    xAvg += measurements.get(i)[0];
-                    yAvg += measurements.get(i)[1];
-                    zAvg += measurements.get(i)[2];
-                }
-                xAvg /= MAXITERATION;
-                yAvg /= MAXITERATION;
-                zAvg /= MAXITERATION;
-                measurements.addLast(vectorsXYZ);
-                measurements.removeFirst();
-            } else {
-                measurements.addLast(vectorsXYZ);
-                counterAverageWork++;
-                if (counterAverageWork == MAXITERATION) {
-                    averageWork = true;
-                }
-            }
 
-            double x = xAvg;
-            double y = yAvg;
-            double z = zAvg;
-            double angleXYtoZ = Math.toDegrees(Math.acos((x * x + y * y) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(x * x + y * y))));//field xy to axis z
-            double angleYZtoX = Math.toDegrees(Math.acos((y * y + z * z) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(y * y + z * z))));//field yz to axis x
-            double angleZXtoY = Math.toDegrees(Math.acos((z * z + x * x) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(z * z + x * x))));//field zx to axis y
+            float[] averages = calculateAverageMeasures(vectorsXYZ);
+            float x = averages[0];
+            float y = averages[1];
+            float z = averages[2];
 
-            double angleCtoX;
-            if (x != 0) {
-                angleCtoX = Math.toDegrees(Math.atan(Math.abs(y) / Math.abs(x)));
-            } else {
-                angleCtoX = 90;
-            }
-
-            if (angleIsAboveLimit(angleXYtoZ)) angleXYtoZ = 90 - maxAngle;
-            if (angleIsAboveLimit(angleYZtoX)) angleYZtoX = 90 - maxAngle;
-            if (angleIsAboveLimit(angleZXtoY)) angleZXtoY = 90 - maxAngle;
-
-            doAreaXY(xAvg, yAvg, zAvg, angleCtoX, angleXYtoZ);
+            doAreaXY(x, y, z, rotationAngle(x,y), anglePlaneXYtoAxisZ(x,y,z));
             doVertical(angleToAxisY(x,y));
             doHorizontal(angleToAxisX(x,y));
         }
+    }
+
+    private float[] calculateAverageMeasures(float[] measure){
+        float[] averages = new float[3];
+        if (averageWork) {
+            for (int i = 0; i < MAXITERATION; i++) {
+                averages[0] += measurements.get(i)[0];
+                averages[1] += measurements.get(i)[1];
+                averages[2] += measurements.get(i)[2];
+            }
+            averages[0] /= MAXITERATION;
+            averages[1] /= MAXITERATION;
+            averages[2] /= MAXITERATION;
+            measurements.addLast(measure);
+            measurements.removeFirst();
+        } else {
+            measurements.addLast(measure);
+            counterAverageWork++;
+            if (counterAverageWork == MAXITERATION) {
+                averageWork = true;
+            }
+        }
+        return averages;
+    }
+
+    private double anglePlaneXYtoAxisZ(double x, double y, double z){
+        double angle = Math.toDegrees(Math.acos((x * x + y * y) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(x * x + y * y))));
+        return (angleIsAboveLimit(angle)) ? 90-maxAngle : angle;
+    }
+
+    private double rotationAngle(double x, double y){
+        double angle;
+        if (x != 0) {
+            angle = Math.toDegrees(Math.atan(Math.abs(y) / Math.abs(x)));
+        } else {
+            angle = 90;
+        }
+        return angle;
     }
 
     private double angleToAxisY(double x, double y){
