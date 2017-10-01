@@ -6,37 +6,44 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    String TAG = "*********";
+    private final static int MAX_ITERATION = 10;
+    private final static float MAX_ANGLE = 25.0f;
 
-    private TextView axisX, axisY, axisZ;
     private ImageView bubbleAreaXY, bubbleHorizontal, bubbleVertical, areaXY, scaleHorizontal, scaleVertical;
     private SensorManager sensorManager;
     private Sensor rotationSensor;
-    private float areaParameter;
-    private float maxAngle = 25.0f;
+    private boolean averageWork = false;
+    private int counterAverageWork = 0;
+
+    private LinkedList<float[]> measurements = new LinkedList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initVariable();
+        initSensors();
+    }
+
+    private void initSensors() {
+        sensorManager = (SensorManager) getApplicationContext().getSystemService(SENSOR_SERVICE);
+        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    }
+
+    private void initVariable() {
         bubbleAreaXY = (ImageView) findViewById(R.id.imageBubbleAreaXY);
         bubbleVertical = (ImageView) findViewById(R.id.imageBubbleVertical);
         bubbleHorizontal = (ImageView) findViewById(R.id.imageBubbleHorizontal);
         areaXY = (ImageView) findViewById(R.id.imageArea);
         scaleVertical = (ImageView) findViewById(R.id.imageScaleVertical);
         scaleHorizontal = (ImageView) findViewById(R.id.imageScaleHorizontal);
-
-        sensorManager = (SensorManager) getApplicationContext().getSystemService(SENSOR_SERVICE);
-        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     }
 
     @Override
@@ -59,11 +66,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int i) {
     }
 
-    private boolean averageWork = false;
-    private int counterAverageWork = 0;
-    private final int MAXITERATION = 10;
-    private LinkedList<float[]> measurements = new LinkedList<>();
-
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -74,41 +76,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float y = averages[1];
             float z = averages[2];
 
-            doAreaXY(x, y, z, rotationAngle(x,y), anglePlaneXYtoAxisZ(x,y,z));
-            doVertical(angleToAxisY(x,y));
-            doHorizontal(angleToAxisX(x,y));
+            setPlaneXY(x, y, rotationXYAngle(x, y), anglePlaneXYtoAxisZ(x, y, z));
+            setScaleVertical(calculateAngleToAxisY(x, y));
+            setScaleHorizontal(calculateAngleToAxisX(x, y));
         }
     }
 
-    private float[] calculateAverageMeasures(float[] measure){
+    private float[] calculateAverageMeasures(float[] measure) {
         float[] averages = new float[3];
         if (averageWork) {
-            for (int i = 0; i < MAXITERATION; i++) {
+            for (int i = 0; i < MAX_ITERATION; i++) {
                 averages[0] += measurements.get(i)[0];
                 averages[1] += measurements.get(i)[1];
                 averages[2] += measurements.get(i)[2];
             }
-            averages[0] /= MAXITERATION;
-            averages[1] /= MAXITERATION;
-            averages[2] /= MAXITERATION;
+            averages[0] /= MAX_ITERATION;
+            averages[1] /= MAX_ITERATION;
+            averages[2] /= MAX_ITERATION;
             measurements.addLast(measure);
             measurements.removeFirst();
         } else {
             measurements.addLast(measure);
             counterAverageWork++;
-            if (counterAverageWork == MAXITERATION) {
+            if (counterAverageWork == MAX_ITERATION) {
                 averageWork = true;
             }
         }
         return averages;
     }
 
-    private double anglePlaneXYtoAxisZ(double x, double y, double z){
+    private double anglePlaneXYtoAxisZ(double x, double y, double z) {
         double angle = Math.toDegrees(Math.acos((x * x + y * y) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(x * x + y * y))));
-        return (angleIsAboveLimit(angle)) ? 90-maxAngle : angle;
+        return (isAngleAboveLimit(angle)) ? 90 - MAX_ANGLE : angle;
     }
 
-    private double rotationAngle(double x, double y){
+    private double rotationXYAngle(double x, double y) {
         double angle;
         if (x != 0) {
             angle = Math.toDegrees(Math.atan(Math.abs(y) / Math.abs(x)));
@@ -118,16 +120,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return angle;
     }
 
-    private double angleToAxisY(double x, double y){
+    private double calculateAngleToAxisY(double x, double y) {
         double angle;
-        if (y!=0){
-            angle = Math.toDegrees(Math.atan(x/y));
-            if (angle > 0 && angle < 90-maxAngle){
-                angle = 90-maxAngle;
-            }else if (angle < 0 && angle > -90+maxAngle){
-                angle = -90+maxAngle;
+        if (y != 0) {
+            angle = Math.toDegrees(Math.atan(x / y));
+            if (angle > 0 && angle < 90 - MAX_ANGLE) {
+                angle = 90 - MAX_ANGLE;
+            } else if (angle < 0 && angle > -90 + MAX_ANGLE) {
+                angle = -90 + MAX_ANGLE;
             }
-        }else {
+        } else {
             angle = 90;
         }
 
@@ -137,16 +139,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return -angle;
     }
 
-    private double angleToAxisX(double x, double y){
+    private double calculateAngleToAxisX(double x, double y) {
         double angle;
-        if (x!=0){
-            angle = Math.toDegrees(Math.atan(y/x));
-            if (angle > 0 && angle < 90-maxAngle){
-                angle = 90-maxAngle;
-            }else if (angle < 0 && angle > -90+maxAngle){
-                angle = -90+maxAngle;
+        if (x != 0) {
+            angle = Math.toDegrees(Math.atan(y / x));
+            if (angle > 0 && angle < 90 - MAX_ANGLE) {
+                angle = 90 - MAX_ANGLE;
+            } else if (angle < 0 && angle > -90 + MAX_ANGLE) {
+                angle = -90 + MAX_ANGLE;
             }
-        }else {
+        } else {
             angle = 90;
         }
 
@@ -156,69 +158,69 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return angle;
     }
 
-    private void doHorizontal(double angle){
-        float aParam = setStartParameters(scaleHorizontal.getWidth(), scaleHorizontal.getHeight(), scaleHorizontal, bubbleHorizontal);
-        int shift = 0;
-        if (angle >= 0){
+    private void setScaleHorizontal(double angle) {
+        float aParam = setHorizontalParameters(scaleHorizontal.getWidth(), scaleHorizontal.getHeight(), scaleHorizontal, bubbleHorizontal);
+        int shift;
+        if (angle >= 0) {
             shift = (int) (aParam * (90 - angle));
-        }else {
-            shift =  (int) (aParam * (-90 - angle));
+        } else {
+            shift = (int) (aParam * (-90 - angle));
         }
         bubbleHorizontal.setPadding(centerBubble(scaleHorizontal.getWidth(), bubbleHorizontal) + shift, centerBubble(scaleHorizontal.getHeight(), bubbleHorizontal), 0, 0);
 
     }
 
-    private void doVertical(double angle) {
-        float aParam = setStartParametersVertical(scaleVertical.getWidth(), scaleVertical.getHeight(), scaleVertical, bubbleVertical);
-        int shift = 0;
-        if (angle >= 0){
+    private void setScaleVertical(double angle) {
+        float aParam = setVerticalParameters(scaleVertical.getWidth(), scaleVertical.getHeight(), scaleVertical, bubbleVertical);
+        int shift;
+        if (angle >= 0) {
             shift = (int) (aParam * (90 - angle));
-        }else {
-            shift =  (int) (aParam * (-90 - angle));
+        } else {
+            shift = (int) (aParam * (-90 - angle));
         }
         bubbleVertical.setPadding(centerBubble(scaleVertical.getWidth(), bubbleVertical), centerBubble(scaleVertical.getHeight(), bubbleVertical) + shift, 0, 0);
 
     }
 
-    private void doAreaXY(float x, float y, float z, double angle, double angleArea) {
-        double rotationOnXY = 0;
+    private void setPlaneXY(float x, float y, double angle, double angleToAxisZ) {
+        double rotationBubbleXY = 0;
 
-        if (x >= 0 && y >= 0) rotationOnXY = (90 - angle) + 270;//quarter 1
-        if (x >= 0 && y <= 0) rotationOnXY = angle;//quarter 4
-        if (x <= 0 && y >= 0) rotationOnXY = angle + 180;//quarter 2
-        if (x <= 0 && y <= 0) rotationOnXY = (90 - angle) + 90;//quarter 3
+        if (x >= 0 && y >= 0) rotationBubbleXY = (90 - angle) + 270;//quarter 1
+        if (x >= 0 && y <= 0) rotationBubbleXY = angle;//quarter 4
+        if (x <= 0 && y >= 0) rotationBubbleXY = angle + 180;//quarter 2
+        if (x <= 0 && y <= 0) rotationBubbleXY = (90 - angle) + 90;//quarter 3
 
         int areaXYWidth = areaXY.getWidth();
         int areaXYHeight = areaXY.getHeight();
-        float aParam = setStartParameters(areaXYWidth, areaXYHeight, areaXY, bubbleAreaXY);
+        float aParam = setHorizontalParameters(areaXYWidth, areaXYHeight, areaXY, bubbleAreaXY);
 
-        bubbleAreaXY.setPadding(centerBubble(areaXYWidth, bubbleAreaXY) + (int) (aParam * (90 - angleArea)), centerBubble(areaXYHeight, bubbleAreaXY), 0, 0);
-        bubbleAreaXY.setRotation((float) rotationOnXY);
+        bubbleAreaXY.setPadding(centerBubble(areaXYWidth, bubbleAreaXY) + (int) (aParam * (90 - angleToAxisZ)), centerBubble(areaXYHeight, bubbleAreaXY), 0, 0);
+        bubbleAreaXY.setRotation((float) rotationBubbleXY);
     }
 
-    private boolean angleIsAboveLimit(double angle) {
-        return angle < (90 - maxAngle);
+    private boolean isAngleAboveLimit(double angle) {
+        return angle < (90 - MAX_ANGLE);
     }
 
-    private float setStartParameters(int width, int height, ImageView background, ImageView bubble) {
+    private float setHorizontalParameters(int width, int height, ImageView background, ImageView bubble) {
         bubble.setPivotX(width / 2);
         bubble.setPivotY(height / 2);
-        return calculateAParameter(getMaxTransition(background.getWidth(), bubble.getDrawable().getIntrinsicWidth()));
+        return calculateSlopeParameter(getMaxShift(background.getWidth(), bubble.getDrawable().getIntrinsicWidth()));
     }
 
-    private float setStartParametersVertical(int width, int height, ImageView background, ImageView bubble) {
+    private float setVerticalParameters(int width, int height, ImageView background, ImageView bubble) {
         bubble.setPivotX(width / 2);
         bubble.setPivotY(height / 2);
-        return calculateAParameter(getMaxTransition(background.getHeight(), bubble.getDrawable().getIntrinsicWidth()));
+        return calculateSlopeParameter(getMaxShift(background.getHeight(), bubble.getDrawable().getIntrinsicWidth()));
     }
 
-    private int getMaxTransition(int areaWidth, int bubbleWidth) {
+    private int getMaxShift(int areaWidth, int bubbleWidth) {
         return areaWidth / 2 - (2 * bubbleWidth / 3);
     }
 
-    private float calculateAParameter(int maxTransition) {
+    private float calculateSlopeParameter(int maxShift) {
         float minAngle = 0.0f;
-        return ((float) maxTransition) / (maxAngle - minAngle);
+        return ((float) maxShift) / (MAX_ANGLE - minAngle);
     }
 
     private int centerBubble(int lenght, ImageView bubble) {
