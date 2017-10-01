@@ -102,21 +102,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 angleCtoX = 90;
             }
 
+            double angleDtoY;
+            if (y!=0){
+                angleDtoY = Math.toDegrees(Math.atan(x/y));
+                Log.d(TAG, "onSensorChanged: DtoY" + angleDtoY);
+                if (angleDtoY > 0 && angleDtoY < 90-maxAngle){
+                    angleDtoY = 90-maxAngle;
+                }else if (angleDtoY < 0 && angleDtoY > -90+maxAngle){
+                    angleDtoY = -90+maxAngle;
+                }
+            }else {
+                angleDtoY = 90;
+            }
+
+            if (x < 0) {
+                angleDtoY = -angleDtoY;
+            }
+
             if (angleIsAboveLimit(angleXYtoZ)) angleXYtoZ = 90 - maxAngle;
             if (angleIsAboveLimit(angleYZtoX)) angleYZtoX = 90 - maxAngle;
             if (angleIsAboveLimit(angleZXtoY)) angleZXtoY = 90 - maxAngle;
 
             doAreaXY(xAvg, yAvg, zAvg, angleCtoX, angleXYtoZ);
-           // doVertical(angleDtoY);
+            doVertical(-angleDtoY);
         }
     }
 
+
     private void doVertical(double angle) {
         float aParam = setStartParametersVertical(scaleVertical.getWidth(), scaleVertical.getHeight(), scaleVertical, bubbleVertical);
-        Log.d(TAG, "doVertical: "+ aParam);
-        Log.d(TAG, "doVertical: "+ angle);
+        int shift = 0;
+        if (angle >= 0){
+            shift = (int) (aParam * (90 - angle));
+        }else {
+            shift =  (int) (aParam * (-90 - angle));
+        }
+        bubbleVertical.setPadding(centerBubble(scaleVertical.getWidth(), bubbleVertical), centerBubble(scaleVertical.getHeight(), bubbleVertical) + shift, 0, 0);
 
-        bubbleVertical.setPadding(centerBubble(scaleVertical.getWidth(), bubbleVertical), centerBubble(scaleVertical.getHeight(), bubbleVertical) + (int) (aParam * (90 - angle)), 0, 0);
     }
 
     private void doAreaXY(float x, float y, float z, double angle, double angleArea) {
