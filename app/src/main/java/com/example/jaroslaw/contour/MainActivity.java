@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             double angleYZtoX = Math.toDegrees(Math.acos((y * y + z * z) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(y * y + z * z))));//field yz to axis x
             double angleZXtoY = Math.toDegrees(Math.acos((z * z + x * x) / (Math.sqrt(x * x + y * y + z * z) * Math.sqrt(z * z + x * x))));//field zx to axis y
 
-            double angleCtoX;//angle c to x, c is hypotenuse
+            double angleCtoX;
             if (x != 0) {
                 angleCtoX = Math.toDegrees(Math.atan(Math.abs(y) / Math.abs(x)));
             } else {
@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             double angleDtoY;
             if (y!=0){
                 angleDtoY = Math.toDegrees(Math.atan(x/y));
-                Log.d(TAG, "onSensorChanged: DtoY" + angleDtoY);
                 if (angleDtoY > 0 && angleDtoY < 90-maxAngle){
                     angleDtoY = 90-maxAngle;
                 }else if (angleDtoY < 0 && angleDtoY > -90+maxAngle){
@@ -119,15 +118,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 angleDtoY = -angleDtoY;
             }
 
+            double angleEtoX;
+            if (x!=0){
+                angleEtoX = Math.toDegrees(Math.atan(y/x));
+                if (angleEtoX > 0 && angleEtoX < 90-maxAngle){
+                    angleEtoX = 90-maxAngle;
+                }else if (angleEtoX < 0 && angleEtoX > -90+maxAngle){
+                    angleEtoX = -90+maxAngle;
+                }
+            }else {
+                angleEtoX = 90;
+            }
+
+            if (y < 0) {
+                angleEtoX = -angleEtoX;
+            }
+
             if (angleIsAboveLimit(angleXYtoZ)) angleXYtoZ = 90 - maxAngle;
             if (angleIsAboveLimit(angleYZtoX)) angleYZtoX = 90 - maxAngle;
             if (angleIsAboveLimit(angleZXtoY)) angleZXtoY = 90 - maxAngle;
 
             doAreaXY(xAvg, yAvg, zAvg, angleCtoX, angleXYtoZ);
             doVertical(-angleDtoY);
+            doHorizontal(angleEtoX);
         }
     }
 
+    private void doHorizontal(double angle){
+        float aParam = setStartParameters(scaleHorizontal.getWidth(), scaleHorizontal.getHeight(), scaleHorizontal, bubbleHorizontal);
+        int shift = 0;
+        if (angle >= 0){
+            shift = (int) (aParam * (90 - angle));
+        }else {
+            shift =  (int) (aParam * (-90 - angle));
+        }
+        bubbleHorizontal.setPadding(centerBubble(scaleHorizontal.getWidth(), bubbleHorizontal) + shift, centerBubble(scaleHorizontal.getHeight(), bubbleHorizontal), 0, 0);
+
+    }
 
     private void doVertical(double angle) {
         float aParam = setStartParametersVertical(scaleVertical.getWidth(), scaleVertical.getHeight(), scaleVertical, bubbleVertical);
