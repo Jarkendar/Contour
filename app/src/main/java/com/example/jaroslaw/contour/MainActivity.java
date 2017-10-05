@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
 
@@ -14,12 +15,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private final static int MAX_ITERATION = 10;
     private final static float MAX_ANGLE = 25.0f;
+    private final static int WAIT_ITERATION_REFRESH = 10;
 
     private ImageView bubbleAreaXY, bubbleHorizontal, bubbleVertical, areaXY, scaleHorizontal, scaleVertical;
     private SensorManager sensorManager;
     private Sensor rotationSensor;
     private boolean averageWork = false;
-    private int counterAverageWork = 0;
+    private int counterAverageWork = 0, waitTimer = 0;
 
     private LinkedList<float[]> measurements = new LinkedList<>();
 
@@ -28,8 +30,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setActionBar();
         initVariable();
         initSensors();
+    }
+
+    private void setActionBar(){
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.hide();
     }
 
     private void initSensors() {
@@ -76,9 +85,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float y = averages[1];
             float z = averages[2];
 
-            setPlaneXY(x, y, rotationXYAngle(x, y), anglePlaneXYtoAxisZ(x, y, z));
-            setScaleVertical(calculateAngleToAxisY(x, y));
-            setScaleHorizontal(calculateAngleToAxisX(x, y));
+            if (waitTimer % WAIT_ITERATION_REFRESH == 0) {
+                setPlaneXY(x, y, rotationXYAngle(x, y), anglePlaneXYtoAxisZ(x, y, z));
+                setScaleVertical(calculateAngleToAxisY(x, y));
+                setScaleHorizontal(calculateAngleToAxisX(x, y));
+                waitTimer = WAIT_ITERATION_REFRESH - 1;
+            }else{
+                waitTimer--;
+            }
         }
     }
 
